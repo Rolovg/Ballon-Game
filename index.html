@@ -1,0 +1,152 @@
+<--! Created by Rolovg -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Balloon Shooter Game</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Courier New', monospace;
+            background: black;
+            color: white;
+        }
+
+        #gameCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            cursor: none;
+        }
+
+        #score {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 24px;
+            color: white;
+        }
+
+        #streak {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 24px;
+            color: white;
+        }
+
+        .sight {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border: 2px solid red;
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .balloon {
+            position: absolute;
+            width: 40px;
+            height: 60px;
+            background: linear-gradient(to bottom, red, pink);
+            border-radius: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="score">Score: 0</div>
+    <div id="streak">Streak: 0</div>
+    <canvas id="gameCanvas"></canvas>
+    <div class="sight" id="sight"></div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreDisplay = document.getElementById('score');
+        const streakDisplay = document.getElementById('streak');
+        const sight = document.getElementById('sight');
+        let score = 0;
+        let streak = 0;
+        const balloons = [];
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        function spawnBalloon() {
+            const balloon = {
+                x: Math.random() * (canvas.width - 40),
+                y: canvas.height,
+                speed: Math.random() * 2 + 1,
+            };
+            balloons.push(balloon);
+        }
+
+        function drawBalloon(balloon) {
+            ctx.beginPath();
+            ctx.ellipse(balloon.x + 20, balloon.y + 30, 20, 30, 0, 0, Math.PI * 2);
+            ctx.fillStyle = 'red';
+            ctx.fill();
+            ctx.closePath();
+        }
+
+        function updateBalloons() {
+            for (let i = balloons.length - 1; i >= 0; i--) {
+                balloons[i].y -= balloons[i].speed;
+                if (balloons[i].y + 60 < 0) {
+                    balloons.splice(i, 1);
+                    streak = 0;
+                }
+            }
+        }
+
+        function drawBalloons() {
+            balloons.forEach(drawBalloon);
+        }
+
+        function detectHit(x, y) {
+            for (let i = balloons.length - 1; i >= 0; i--) {
+                const balloon = balloons[i];
+                if (
+                    x > balloon.x &&
+                    x < balloon.x + 40 &&
+                    y > balloon.y &&
+                    y < balloon.y + 60
+                ) {
+                    balloons.splice(i, 1);
+                    score++;
+                    streak++;
+                    return;
+                }
+            }
+            streak = 0;
+        }
+
+        function gameLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            updateBalloons();
+            drawBalloons();
+            scoreDisplay.textContent = `Score: ${score}`;
+            streakDisplay.textContent = `Streak: ${streak}`;
+            requestAnimationFrame(gameLoop);
+        }
+
+        setInterval(spawnBalloon, 1000);
+
+        window.addEventListener('mousemove', (e) => {
+            sight.style.left = `${e.clientX - 20}px`;
+            sight.style.top = `${e.clientY - 20}px`;
+        });
+
+        window.addEventListener('click', (e) => {
+            detectHit(e.clientX, e.clientY);
+        });
+
+        gameLoop();
+    </script>
+</body>
+</html>
+
